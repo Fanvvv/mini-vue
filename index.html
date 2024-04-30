@@ -10,15 +10,20 @@
     <script type="module">
         import { reactive, effect } from './packages/reactivity/dist/reactivity.esm.js'
 
-        const state = reactive({ name: 'fan', age: 18, obj: { a: 1 } })
+        const state = reactive({ flag: false, name: 'fan', age: 18, obj: { a: 1 } })
 
         effect(() => {
-          state.age = Math.random()
-          document.body.innerText = state.name + state.age
+          document.body.innerText = state.flag ? state.name : state.age
         })
 
+        // 默认第一次 flag 会收集 effect， age 会收集当前的 effect
+        // 默认第一次 flag 会收集 effect， name 会收集了我们的 effect， 应该将age收集的依赖移除掉，否则更改age还是会触发更新
         setTimeout(() => {
-          state.name = 'fanfan'
+          state.flag = !state.flag
+
+          setTimeout(() => {
+            state.age = 20
+          }, 1000)
         }, 1000)
     </script>
 </body>

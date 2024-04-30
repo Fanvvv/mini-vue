@@ -1,6 +1,17 @@
 // 用一个全局变量存储被注册的副作用函数
 export let activeEffect
 
+// 每次执行依赖收集前，先做清理操作
+function cleanupEffect(effect) {
+    // 每次执行 effect 之前，我们应该清除掉 effect 中依赖的所有属性
+    let { deps } = effect
+    for (let i = 0; i < deps.length; i++) {
+        deps[i].delete(effect) // 属性记录了 effect     { key: new Set() }
+    }
+    // 先把 set 清空，再清除 deps，直接清除的话，set 中还是有数据的
+    effect.deps.length = 0 // 清理对应数组的
+}
+
 class ReactiveEffect<T = any> {
     active = true
     // effect 嵌套的父子关系
@@ -19,7 +30,8 @@ class ReactiveEffect<T = any> {
             // 父子关系用于 effect 嵌套收集
             this.parent = activeEffect
             activeEffect = this
-            return this.fn()
+            cleanupEffect(this)
+            return this.fn() // 这个地方做了依赖收集
         } finally {
             activeEffect = this.parent
             this.parent = undefined
@@ -89,7 +101,7 @@ export function trigger(target, key, newValue, oldValue) {
             // 当重新执行此effect函数，会将当前的effect放在全局上
             // 判断是否与全局的一样，如果一样，表示执行过
             if (activeEffect != effect) {
-                effect.run()
+                effect.run() // 每次调用run 都会重新依赖收集
             }
         })
     }
