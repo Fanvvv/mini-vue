@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>mini-vue</title>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        import { reactive, effect } from './packages/reactivity/dist/reactivity.esm.js'
+
+        const state = reactive({ name: 'fan', age: 18, obj: { a: 1 } })
+
+        effect(() => {
+          state.age = Math.random()
+          document.body.innerText = state.name + state.age
+        })
+
+        setTimeout(() => {
+          state.name = 'fanfan'
+        }, 1000)
+    </script>
+</body>
+</html>
