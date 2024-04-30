@@ -1,9 +1,12 @@
 // 使用 esbuild 加快开发构建速度。
 // 仍使用 Rollup 进行生产构建，因为它会生成更小的文件，并提供更好的 tree-shaking 效果。
 
-const { resolve } = require('path')
-const { context } = require('esbuild')
-const minimist = require('minimist')
+import {resolve} from "node:path";
+import { createRequire } from 'node:module'
+import {context} from "esbuild";
+import minimist from "minimist";
+
+const require = createRequire(import.meta.url)
 
 // 解析用户执行命令行的参数
 const args = minimist(process.argv.slice(2))
