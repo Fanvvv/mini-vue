@@ -85,12 +85,12 @@ export function trigger(target, key, newValue, oldValue) {
     if (dep) {
         // 遍历存放 effect 的set，执行fn函数
         dep.forEach(effect => {
-            effect.run()
+            // effect.run() // 直接执行，如果 effect 中有很多赋值操作，会导致堆栈溢出
             // 当重新执行此effect函数，会将当前的effect放在全局上
             // 判断是否与全局的一样，如果一样，表示执行过
-            // if (activeEffect != effect) {
-            //     effect.run()
-            // }
+            if (activeEffect != effect) {
+                effect.run()
+            }
         })
     }
 }
