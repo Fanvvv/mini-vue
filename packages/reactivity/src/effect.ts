@@ -37,6 +37,13 @@ class ReactiveEffect<T = any> {
             this.parent = undefined
         }
     }
+    // 将 effect 变成失活态
+    stop() {
+        if (this.active) {
+            cleanupEffect(this) // 先将effect的依赖全部清除掉
+            this.active = false // 再将它变成失活态
+        }
+    }
 }
 
 // 依赖收集 就是将当前的 effect 变成全局的 稍后取值的时候可以拿到这个全局的 effect
@@ -44,6 +51,10 @@ class ReactiveEffect<T = any> {
 export function effect<T = any>(fn: () => T) {
     const _effect = new ReactiveEffect(fn)
     _effect.run() // 默认让响应式的 effect 执行一次
+
+    const runner = _effect.run.bind(_effect) // 确保this指向的是当前的effect
+    runner.effect = _effect
+    return runner
 }
 
 /**
