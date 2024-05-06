@@ -1,8 +1,10 @@
+export type EffectScheduler = (...args: any[]) => any
+
 // 用一个全局变量存储被注册的副作用函数
-export let activeEffect
+export let activeEffect: ReactiveEffect | undefined
 
 // 每次执行依赖收集前，先做清理操作
-function cleanupEffect(effect) {
+function cleanupEffect(effect: ReactiveEffect) {
     // 每次执行 effect 之前，我们应该清除掉 effect 中依赖的所有属性
     let { deps } = effect
     for (let i = 0; i < deps.length; i++) {
@@ -18,7 +20,10 @@ class ReactiveEffect<T = any> {
     parent = undefined
     // 记录 activeEffect 依赖了哪些属性
     deps = []
-    constructor(public fn: () => T) {}
+    constructor(
+        public fn: () => T,
+        public scheduler?: EffectScheduler,
+    ) {}
 
     run() {
         if (!this.active) {
@@ -48,8 +53,8 @@ class ReactiveEffect<T = any> {
 
 // 依赖收集 就是将当前的 effect 变成全局的 稍后取值的时候可以拿到这个全局的 effect
 // 用于注册副作用函数
-export function effect<T = any>(fn: () => T) {
-    const _effect = new ReactiveEffect(fn)
+export function effect<T = any>(fn: () => T, options?) {
+    const _effect = new ReactiveEffect(fn, options.scheduler)
     _effect.run() // 默认让响应式的 effect 执行一次
 
     const runner = _effect.run.bind(_effect) // 确保this指向的是当前的effect
@@ -114,7 +119,11 @@ export function trigger(target, key, newValue, oldValue) {
             // 当重新执行此effect函数，会将当前的effect放在全局上
             // 判断是否与全局的一样，如果一样，表示执行过
             if (activeEffect != effect) {
-                effect.run() // 每次调用run 都会重新依赖收集
+                if (!effect.scheduler) {
+                    effect.run() // 每次调用run 都会重新依赖收集
+                } else {
+                    effect.scheduler()
+                }
             }
         })
     }

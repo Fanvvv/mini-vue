@@ -13,21 +13,25 @@
         const state = reactive({ flag: false, name: 'fan', age: 18, obj: { a: 1 } })
 
         const runner = effect(() => {
+          console.log('runner')
           document.body.innerText = state.flag ? state.name : state.age
+        }, {
+          scheduler() {
+            console.log(this) // this 指向当前的 effect
+            runner()
+            console.log('数据变化了')
+          }
         })
 
-        // 将其变成失活态
-        runner.effect.stop()
         // 默认第一次 flag 会收集 effect， age 会收集当前的 effect
         // 默认第一次 flag 会收集 effect， name 会收集了我们的 effect， 应该将age收集的依赖移除掉，否则更改age还是会触发更新
         setTimeout(() => {
           state.flag = !state.flag
-          runner()
-          console.log('flag修改了')
-          setTimeout(() => {
-            console.log('age修改了')
-            state.age = 20
-          }, 1000)
+          // console.log('flag修改了')
+          // setTimeout(() => {
+          //   console.log('age修改了')
+          //   state.age = 20
+          // }, 1000)
         }, 1000)
     </script>
 </body>
