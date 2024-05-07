@@ -120,40 +120,42 @@ export function trigger(target, key, newValue, oldValue) {
     }
     // 如果 set 有值才进行操作
     const dep = depsMap.get(key)
-    if (dep) {
-        // 克隆一个新数组，否则会导致死循环
-        // const effects = [...dep]
-        // 遍历存放 effect 的set，执行fn函数
-        // effects.forEach(effect => {
-        //     // effect.run() // 直接执行，如果 effect 中有很多赋值操作，会导致堆栈溢出
-        //     // 当重新执行此effect函数，会将当前的effect放在全局上
-        //     // 判断是否与全局的一样，如果一样，表示执行过
-        //     if (activeEffect != effect) {
-        //         if (!effect.scheduler) {
-        //             effect.run() // 每次调用run 都会重新依赖收集
-        //         } else {
-        //             effect.scheduler()
-        //         }
-        //     }
-        // })
-        triggerEffects(dep)
-    }
+    // if (dep) {
+    // 克隆一个新数组，否则会导致死循环
+    // const effects = [...dep]
+    // 遍历存放 effect 的set，执行fn函数
+    // effects.forEach(effect => {
+    //     // effect.run() // 直接执行，如果 effect 中有很多赋值操作，会导致堆栈溢出
+    //     // 当重新执行此effect函数，会将当前的effect放在全局上
+    //     // 判断是否与全局的一样，如果一样，表示执行过
+    //     if (activeEffect != effect) {
+    //         if (!effect.scheduler) {
+    //             effect.run() // 每次调用run 都会重新依赖收集
+    //         } else {
+    //             effect.scheduler()
+    //         }
+    //     }
+    // })
+    // }
+    triggerEffects(dep)
 }
 
 export function triggerEffects(dep) {
-    // 克隆一个新数组，否则会导致死循环
-    const effects = [...dep]
-    // 遍历存放 effect 的set，执行fn函数
-    effects.forEach(effect => {
-        // effect.run() // 直接执行，如果 effect 中有很多赋值操作，会导致堆栈溢出
-        // 当重新执行此effect函数，会将当前的effect放在全局上
-        // 判断是否与全局的一样，如果一样，表示执行过
-        if (activeEffect != effect) {
-            if (!effect.scheduler) {
-                effect.run() // 每次调用run 都会重新依赖收集
-            } else {
-                effect.scheduler()
+    if (dep) {
+        // 克隆一个新数组，否则会导致死循环
+        const effects = [...dep]
+        // 遍历存放 effect 的set，执行fn函数
+        effects.forEach(effect => {
+            // effect.run() // 直接执行，如果 effect 中有很多赋值操作，会导致堆栈溢出
+            // 当重新执行此effect函数，会将当前的effect放在全局上
+            // 判断是否与全局的一样，如果一样，表示执行过
+            if (activeEffect != effect) {
+                if (!effect.scheduler) {
+                    effect.run() // 每次调用run 都会重新依赖收集
+                } else {
+                    effect.scheduler()
+                }
             }
-        }
-    })
+        })
+    }
 }
