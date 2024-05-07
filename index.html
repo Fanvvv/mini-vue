@@ -8,31 +8,28 @@
     <div id="app"></div>
 
     <script type="module">
-        import { reactive, effect } from './packages/reactivity/dist/reactivity.esm.js'
+        import { reactive, effect, computed } from './packages/reactivity/dist/reactivity.esm.js'
 
         const state = reactive({ flag: false, name: 'fan', age: 18, obj: { a: 1 } })
 
-        const runner = effect(() => {
-          console.log('runner')
-          document.body.innerText = state.flag ? state.name : state.age
-        }, {
-          scheduler() {
-            console.log(this) // this 指向当前的 effect
-            runner()
-            console.log('数据变化了')
+        const aliasName = computed({
+          get() {
+            console.log('默认不执行')
+            return state.name + 'fan'
+          },
+          set(newValue) {
+            // 修改 aliasName 的时候，可以触发其他修改
           }
         })
+        // vue3 中计算属性也具备依赖收集的功能
+        effect(() => {
+          document.body.innerText = aliasName.value
+        })
 
-        // 默认第一次 flag 会收集 effect， age 会收集当前的 effect
-        // 默认第一次 flag 会收集 effect， name 会收集了我们的 effect， 应该将age收集的依赖移除掉，否则更改age还是会触发更新
         setTimeout(() => {
-          state.flag = !state.flag
-          // console.log('flag修改了')
-          // setTimeout(() => {
-          //   console.log('age修改了')
-          //   state.age = 20
-          // }, 1000)
+          state.name = 'xiao'
         }, 1000)
+
     </script>
 </body>
 </html>
