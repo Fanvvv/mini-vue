@@ -14,7 +14,7 @@ function cleanupEffect(effect: ReactiveEffect) {
     effect.deps.length = 0 // 清理对应数组的
 }
 
-class ReactiveEffect<T = any> {
+export class ReactiveEffect<T = any> {
     active = true
     // effect 嵌套的父子关系
     parent = undefined
@@ -54,7 +54,7 @@ class ReactiveEffect<T = any> {
 // 依赖收集 就是将当前的 effect 变成全局的 稍后取值的时候可以拿到这个全局的 effect
 // 用于注册副作用函数
 export function effect<T = any>(fn: () => T, options?) {
-    const _effect = new ReactiveEffect(fn, options.scheduler)
+    const _effect = new ReactiveEffect(fn, options?.scheduler)
     _effect.run() // 默认让响应式的 effect 执行一次
 
     const runner = _effect.run.bind(_effect) // 确保this指向的是当前的effect
@@ -94,6 +94,16 @@ export function track(target, key) {
         depsMap.set(key, (dep = new Set()))
     }
     // 判断需不需要收集，没有 activeEffect 的时候进行收集
+    // let shouldTrack = !dep.has(activeEffect)
+    // if (shouldTrack) {
+    //     dep.add(activeEffect)
+    //     activeEffect.deps.push(dep)
+    // }
+    trackEffects(dep)
+}
+
+export function trackEffects(dep) {
+    // 判断需不需要收集，没有 activeEffect 的时候进行收集
     let shouldTrack = !dep.has(activeEffect)
     if (shouldTrack) {
         dep.add(activeEffect)
@@ -112,19 +122,38 @@ export function trigger(target, key, newValue, oldValue) {
     const dep = depsMap.get(key)
     if (dep) {
         // 克隆一个新数组，否则会导致死循环
-        const effects = [...dep]
+        // const effects = [...dep]
         // 遍历存放 effect 的set，执行fn函数
-        effects.forEach(effect => {
-            // effect.run() // 直接执行，如果 effect 中有很多赋值操作，会导致堆栈溢出
-            // 当重新执行此effect函数，会将当前的effect放在全局上
-            // 判断是否与全局的一样，如果一样，表示执行过
-            if (activeEffect != effect) {
-                if (!effect.scheduler) {
-                    effect.run() // 每次调用run 都会重新依赖收集
-                } else {
-                    effect.scheduler()
-                }
-            }
-        })
+        // effects.forEach(effect => {
+        //     // effect.run() // 直接执行，如果 effect 中有很多赋值操作，会导致堆栈溢出
+        //     // 当重新执行此effect函数，会将当前的effect放在全局上
+        //     // 判断是否与全局的一样，如果一样，表示执行过
+        //     if (activeEffect != effect) {
+        //         if (!effect.scheduler) {
+        //             effect.run() // 每次调用run 都会重新依赖收集
+        //         } else {
+        //             effect.scheduler()
+        //         }
+        //     }
+        // })
+        triggerEffects(dep)
     }
+}
+
+export function triggerEffects(dep) {
+    // 克隆一个新数组，否则会导致死循环
+    const effects = [...dep]
+    // 遍历存放 effect 的set，执行fn函数
+    effects.forEach(effect => {
+        // effect.run() // 直接执行，如果 effect 中有很多赋值操作，会导致堆栈溢出
+        // 当重新执行此effect函数，会将当前的effect放在全局上
+        // 判断是否与全局的一样，如果一样，表示执行过
+        if (activeEffect != effect) {
+            if (!effect.scheduler) {
+                effect.run() // 每次调用run 都会重新依赖收集
+            } else {
+                effect.scheduler()
+            }
+        }
+    })
 }
