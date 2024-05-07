@@ -1,5 +1,6 @@
-import { ReactiveFlags } from './reactive'
+import { ReactiveFlags, reactive } from './reactive'
 import { track, trigger } from './effect'
+import { isObject } from '@vue/shared'
 
 export const mutableHandlers = {
     get(target, p: string | symbol, receiver: object) {
@@ -9,7 +10,12 @@ export const mutableHandlers = {
         }
         // 触发 get 的时候进行依赖收集
         track(target, p)
-        return Reflect.get(target, p, receiver)
+        const r = Reflect.get(target, p, receiver)
+        // 深度代理
+        if (isObject(r)) {
+            return reactive(r) // 只有用户取值的时候，才会进行二次代理，不用担心性能
+        }
+        return r
     },
     set(
         target: object,
