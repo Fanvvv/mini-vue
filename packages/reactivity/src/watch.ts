@@ -11,6 +11,8 @@ export interface WatchOptions<Immediate = boolean> extends WatchOptionsBase {
     once?: boolean
 }
 
+type OnCleanup = (cleanupFn: () => void) => void
+
 export function traverse(value: unknown, seen?: Set<unknown>) {
     if (isObject(value)) {
         return value
@@ -37,10 +39,24 @@ export function doWatch(source, cb, { immediate }: WatchOptions = {}) {
         // 最终都处理成函数
         getter = () => traverse(source) // 直接稍后调用run的时候会执行此函数，直接返回对象，只有访问属性才能依赖收集
     } else if (isFunction(source)) {
-        getter = source
+        if (cb) {
+            getter = source
+        } else {
+            getter = () => {
+                if (cleanup) {
+                    cleanup()
+                }
+                // watchEffect 也可以接收一个 onCleanup 参数
+                return source(onCleanup)
+            }
+        }
     }
 
     let oldValue: any
+    let cleanup: (() => void) | undefined
+    const onCleanup: OnCleanup = (fn: () => void) => {
+        cleanup = fn
+    }
     const job = () => {
         // 内部调用 cb 也就是 watch 的回调方法
         if (!effect.active) {
@@ -49,7 +65,8 @@ export function doWatch(source, cb, { immediate }: WatchOptions = {}) {
         if (cb) {
             // watch(source, cb)
             const newValue = effect.run() // 再次调用 effect，拿到新值
-            cb(newValue, oldValue) // 调用回调传入新值和老值
+            if (cleanup) cleanup()
+            cb(newValue, oldValue, onCleanup) // 调用回调传入新值和老值
             oldValue = newValue // 更新
         } else {
             // watchEffect
