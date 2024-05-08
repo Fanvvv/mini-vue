@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>onCleanup</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import { reactive, watchEffect } from '../packages/reactivity/dist/reactivity.esm.js'
+
+    const state = reactive({ flag: false, name: 'fan', age: 18, obj: { a: 1 } })
+    /**
+     * 第一次数据变化了，调用一个接口getData()  2000ms后返回数据
+     * 第二次数据变化了，再调用一个接口getData() 1000ms后返回数据
+     * 这样就会导致第一次的结果覆盖掉第二次的结果
+     */
+    let timer = 3000
+    function getData(data) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve(data)
+        }, timer -= 1000)
+      })
+    }
+
+    // watch(() => state.age, async function(newValue, oldValue, onCleanup) {
+    //   let flag = true
+    //   onCleanup(() => {
+    //     flag = false
+    //   })
+    //   const result = await getData(newValue)
+    //   // 只渲染最后一个值
+    //   if (flag) {
+    //     document.body.innerText = result
+    //   }
+    // })
+
+    watchEffect(async (onCleanup) => {
+      let flag = true
+      onCleanup(() => {
+        flag = false
+      })
+      const result = await getData(state.age)
+      // 只渲染最后一个值
+      if (flag) {
+        document.body.innerText = result
+      }
+    })
+
+    state.age = 19
+    state.age = 20
+
+  </script>
+</body>
+</html>
