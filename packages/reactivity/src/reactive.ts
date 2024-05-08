@@ -11,7 +11,7 @@ export function isReactive(value: unknown): boolean {
 
 const reactiveMap = new WeakMap() // key 只能是对象
 
-export function reactive(target: object) {
+export function reactive(target) {
     if (!isObject(target)) {
         // 不对非对象类型进行处理
         return target
