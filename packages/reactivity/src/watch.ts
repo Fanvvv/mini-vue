@@ -2,7 +2,10 @@ import { isReactive } from './reactive'
 import { isFunction, isObject, isPlainObject } from '@vue/shared'
 import { ReactiveEffect } from './effect'
 
-export interface WatchOptions<Immediate = boolean> {
+export interface WatchOptionsBase {
+    flush?: 'pre' | 'post' | 'sync'
+}
+export interface WatchOptions<Immediate = boolean> extends WatchOptionsBase {
     immediate?: Immediate
     deep?: boolean
     once?: boolean
@@ -28,7 +31,7 @@ export function traverse(value: unknown, seen?: Set<unknown>) {
     return value
 }
 
-export function watch(source, cb, { immediate }: WatchOptions = {}) {
+export function doWatch(source, cb, { immediate }: WatchOptions = {}) {
     let getter: () => any
     if (isReactive(source)) {
         // 最终都处理成函数
@@ -50,7 +53,7 @@ export function watch(source, cb, { immediate }: WatchOptions = {}) {
             oldValue = newValue // 更新
         } else {
             // watchEffect
-            effect.run()
+            effect.run() // 调用 run 方法，会触发依赖重新清理和收集
         }
     }
 
@@ -67,4 +70,12 @@ export function watch(source, cb, { immediate }: WatchOptions = {}) {
         // watchEffect
         effect.run()
     }
+}
+
+export function watch(source: any, cb: any, options?: WatchOptions) {
+    return doWatch(source, cb, options)
+}
+
+export function watchEffect(source: any, options?: WatchOptionsBase) {
+    return doWatch(source, null, options)
 }
