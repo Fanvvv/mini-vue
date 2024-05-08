@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>watch</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import { reactive, watch } from '../packages/reactivity/dist/reactivity.esm.js'
+
+    const state = reactive({ flag: false, name: 'fan', age: 18, obj: { a: 1 } })
+
+    // 不建议直接使用 watch 监听对象，性能比较差
+    // watch就是effect，状态会收集watch effect，属性变化后会触发scheduler
+    watch(() => state.name, (newValue, oldValue) => {
+      console.log(newValue, oldValue)
+    }, { immediate: true })
+
+    state.name = 'fanfan'
+
+  </script>
+</body>
+</html>
