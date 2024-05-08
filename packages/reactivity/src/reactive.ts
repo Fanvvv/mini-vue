@@ -4,6 +4,11 @@ export enum ReactiveFlags {
     IS_REACTIVE = '__v_isReactive',
 }
 
+// 通过判断对象是否有 IS_REACTIVE 属性，有则为 reactive
+export function isReactive(value: unknown): boolean {
+    return !!(value && value[ReactiveFlags.IS_REACTIVE])
+}
+
 const reactiveMap = new WeakMap() // key 只能是对象
 
 export function reactive(target: object) {
