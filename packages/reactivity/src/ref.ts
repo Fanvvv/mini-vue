@@ -1,10 +1,13 @@
 import { hasChanged, isObject } from '@vue/shared'
 import { reactive } from './reactive'
 import { activeEffect, trackEffects, triggerEffects } from './effect'
+import type { ComputedRef } from './computed'
 
 export interface Ref<T = any> {
     value: T
 }
+
+export type MaybeRef<T = any> = T | Ref<T>
 
 export function isRef(r: any): r is Ref {
     return !!(r && r.__v_isRef === true)
@@ -53,4 +56,16 @@ class RefImpl<T> {
             triggerEffects(this.dep)
         }
     }
+}
+
+/**
+ * 可用于保证 ts 类型
+ * function useFoo(x: number | Ref<number>) {
+ *   const unwrapped = unref(x)
+ *   // unwrapped 保证是一个 number 类型
+ * }
+ * @param ref
+ */
+export function unref<T>(ref: MaybeRef<T> | ComputedRef<T>): T {
+    return isRef(ref) ? ref.value : ref
 }
