@@ -1,5 +1,5 @@
 import { hasChanged, isFunction, isObject } from '@vue/shared'
-import { reactive } from './reactive'
+import { isReactive, reactive } from './reactive'
 import { activeEffect, trackEffects, triggerEffects } from './effect'
 import type { ComputedRef } from './computed'
 
@@ -133,4 +133,23 @@ export function toRefs<T extends object>(object: T) {
         ret[key] = propertyToRef(object, key)
     }
     return ret
+}
+
+const shallowUnwrapHandles: ProxyHandler<any> = {
+    get: (target, p, receiver) => {
+        return unref(Reflect.get(target, p, receiver))
+    },
+    set(target, p, newValue, receiver) {
+        const oldValue = target[p]
+        if (isRef(oldValue) && !isRef(newValue)) {
+            oldValue.value = newValue
+            return true
+        } else {
+            return Reflect.set(target, p, newValue, receiver)
+        }
+    },
+}
+
+export function proxyRefs<T extends object>(object: T) {
+    return isReactive(object) ? object : new Proxy(object, shallowUnwrapHandles)
 }
