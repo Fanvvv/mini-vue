@@ -8,6 +8,7 @@ export interface Ref<T = any> {
 }
 
 export type MaybeRef<T = any> = T | Ref<T>
+export type MaybeRefOrGetter<T = any> = MaybeRef<T> | (() => T)
 
 export function isRef(r: any): r is Ref {
     return !!(r && r.__v_isRef === true)
@@ -120,4 +121,8 @@ export function toRef(source, key?: string): Ref {
         // 返回个 ref
         return ref(source)
     }
+}
+
+export function toValue<T>(source: MaybeRefOrGetter<T> | ComputedRef<T>): T {
+    return isFunction(source) ? source() : unref(source)
 }
