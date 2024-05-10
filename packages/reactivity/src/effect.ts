@@ -1,3 +1,5 @@
+import { recordEffectScope } from './effectScope'
+
 export type EffectScheduler = (...args: any[]) => any
 
 // 用一个全局变量存储被注册的副作用函数
@@ -23,7 +25,10 @@ export class ReactiveEffect<T = any> {
     constructor(
         public fn: () => T,
         public scheduler?: EffectScheduler,
-    ) {}
+    ) {
+        // 收集 effect
+        recordEffectScope(this)
+    }
 
     run() {
         if (!this.active) {
