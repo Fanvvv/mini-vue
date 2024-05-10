@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ref</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import {
+      watchEffect,
+      ref,
+      isRef,
+      reactive,
+      unref,
+      toRef,
+      toValue,
+      toRefs,
+      proxyRefs
+    } from '../packages/reactivity/dist/reactivity.esm.js'
+    // import { watchEffect, ref, isRef, reactive, unref, proxyRefs } from '../node_modules/vue/dist/vue.esm-browser.js'
+
+    const name = ref('fan')
+    const state = reactive({ name: 'fan', age: 18})
+
+    watchEffect(() => {
+      document.body.innerText = name.value
+    })
+    console.log('isRef: ', isRef(name), isRef(state)) // isRef:  true false
+
+    console.log('unref: ', unref(name), name.value, unref(name) === name.value) // unref:  fan fan true
+
+    console.log('toRef: ', toRef(1).value, toRef(state, 'age').value, toRef(() => state.name).value) // toRef:  1 18 fan
+
+    console.log('toValue: ', toValue(1), toValue(() => state.name), toValue(name)) // toValue:  1 fan fan
+
+    const { name: toRefsName, age } = toRefs(state)
+    console.log('toRefs: ', toRefsName.value, age.value, state.age === age.value) // toRefs:  fan 18 true
+    const { name: proxyRefsName, age: proxyRefsAge } = proxyRefs(state)
+    console.log('proxyRefs: ', proxyRefsName, proxyRefsAge) // proxyRefs: fan 18
+
+    setTimeout(() => {
+      name.value = 'fanfan'
+      state.name = 'fanfan'
+    }, 1000)
+  </script>
+</body>
+</html>
