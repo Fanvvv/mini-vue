@@ -126,3 +126,11 @@ export function toRef(source, key?: string): Ref {
 export function toValue<T>(source: MaybeRefOrGetter<T> | ComputedRef<T>): T {
     return isFunction(source) ? source() : unref(source)
 }
+
+export function toRefs<T extends object>(object: T) {
+    const ret: any = Array.isArray(object) ? new Array(object.length) : {}
+    for (const key in object) {
+        ret[key] = propertyToRef(object, key)
+    }
+    return ret
+}
