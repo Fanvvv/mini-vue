@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>render 函数</title>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import { createRenderer, h } from '../node_modules/vue/dist/vue.esm-browser.js'
+
+    const { render } = createRenderer({
+      createElement(element) {
+        return document.createElement(element)
+      },
+      setElementText(element, text) {
+        element.innerHTML = text
+      },
+      insert(el, container) {
+        container.appendChild(el)
+      }
+    })
+
+    render(h('div', 'hello!'), document.getElementById('app'))
+  </script>
+</body>
+</html>
