@@ -43,6 +43,12 @@ importers:
         specifier: workspace:^
         version: link:../shared
 
+  packages/runtime-dom:
+    dependencies:
+      '@vue/shared':
+        specifier: workspace:^
+        version: link:../shared
+
   packages/shared: {}
 
 packages:
