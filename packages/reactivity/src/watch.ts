@@ -14,7 +14,7 @@ export interface WatchOptions<Immediate = boolean> extends WatchOptionsBase {
 type OnCleanup = (cleanupFn: () => void) => void
 
 export function traverse(value: unknown, seen?: Set<unknown>) {
-    if (isObject(value)) {
+    if (!isObject(value)) {
         return value
     }
     // 考虑循环引用的问题，采用set来解决这个问题
