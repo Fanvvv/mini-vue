@@ -27,3 +27,6 @@ export const isOn = (key: string) =>
     key.charCodeAt(0) === 111 &&
     key.charCodeAt(1) === 110 &&
     (key.charCodeAt(2) > 122 || key.charCodeAt(2) < 97)
+
+// 判断是否为字符串
+export const isString = (val: unknown): val is string => typeof val === 'string'
