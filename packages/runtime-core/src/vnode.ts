@@ -1,5 +1,4 @@
-import { isString } from '@vue/shared'
-import { ShapeFlags } from '@vue/shared/src/shapeFlags'
+import { ShapeFlags, isString } from '@vue/shared'
 
 // 判断是否为虚拟节点
 export function isVNode(value: any) {
