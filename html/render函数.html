@@ -8,21 +8,28 @@
   <div id="app"></div>
 
   <script type="module">
-    import { createRenderer, h } from '../node_modules/vue/dist/vue.esm-browser.js'
+    import { h } from '../packages/runtime-dom/dist/runtime-dom.esm.js'
+    // import { createRenderer, h } from '../node_modules/vue/dist/vue.esm-browser.js'
 
-    const { render } = createRenderer({
-      createElement(element) {
-        return document.createElement(element)
-      },
-      setElementText(element, text) {
-        element.innerHTML = text
-      },
-      insert(el, container) {
-        container.appendChild(el)
-      }
-    })
+    // console.log(h('div', { style: 'color: red;' }))
+    // console.log(h('div', ['hello', 'world']))
+    // console.log(h('div', h('span', 'text')))
+    console.log(h('div', { style: 'color: red;' }, h('span', 'text')))
+    console.log(h('div', 'a', 'b', 'c', 'd', 'e', 'f'))
 
-    render(h('div', 'hello!'), document.getElementById('app'))
+    // const { render } = createRenderer({
+    //   createElement(element) {
+    //     return document.createElement(element)
+    //   },
+    //   setElementText(element, text) {
+    //     element.innerHTML = text
+    //   },
+    //   insert(el, container) {
+    //     container.appendChild(el)
+    //   }
+    // })
+
+    // render(h('div', 'hello!'), document.getElementById('app'))
   </script>
 </body>
 </html>
