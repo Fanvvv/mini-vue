@@ -8,13 +8,13 @@
   <div id="app"></div>
 
   <script type="module">
-    import { h } from '../packages/runtime-dom/dist/runtime-dom.esm.js'
+    import { h, render } from '../packages/runtime-dom/dist/runtime-dom.esm.js'
     // import { createRenderer, h } from '../node_modules/vue/dist/vue.esm-browser.js'
 
-    // console.log(h('div', { style: 'color: red;' }))
+    // console.log(h('div', { style: { color: 'red'} }))
     // console.log(h('div', ['hello', 'world']))
     // console.log(h('div', h('span', 'text')))
-    console.log(h('div', { style: 'color: red;' }, h('span', 'text')))
+    console.log(h('div', { style: { color: 'red'} }, h('span', 'text')))
     console.log(h('div', 'a', 'b', 'c', 'd', 'e', 'f'))
 
     // const { render } = createRenderer({
@@ -29,7 +29,7 @@
     //   }
     // })
 
-    // render(h('div', 'hello!'), document.getElementById('app'))
+    render(h('div', { style: { color: 'red'}}, 'hello!'), document.getElementById('app'))
   </script>
 </body>
 </html>
