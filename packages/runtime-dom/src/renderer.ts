@@ -1,5 +1,6 @@
 import { ShapeFlags } from '@vue/shared'
 import { isSameVNodeType } from '@vue/runtime-core'
+import {patchProp} from "./patchProp";
 
 export function createRenderer(options) {
     const {
@@ -15,12 +16,34 @@ export function createRenderer(options) {
         nextSibling: hostNextSibling,
     } = options
 
+    /**
+     * 挂载子元素
+     * @param children
+     * @param el
+     * @param start
+     */
     const mountChildren = (children, el, start = 0) => {
         for (let i = start; i < children.length; i++) {
             patch(null, children[i], el)
         }
     }
 
+    /**
+     * 卸载子元素
+     * @param children
+     * @param start
+     */
+    const unmountChildren = (children, start = 0) => {
+        for (let i = start; i < children.length; i++) {
+            unmount(children[i])
+        }
+    }
+
+    /**
+     * 挂在元素节点
+     * @param vnode
+     * @param container
+     */
     const mountElement = (vnode, container) => {
         const { type, props, children, shapeFlag } = vnode
         // 创建元素
@@ -40,12 +63,115 @@ export function createRenderer(options) {
         hostInsert(el, container)
     }
 
+    /**
+     * 对比属性，更新属性
+     * @param oldProps
+     * @param newProps
+     * @param el
+     */
+    const patchProps = (oldProps, newProps, el) => {
+        if (oldProps !== newProps) {
+            for (const key in newProps) {
+                const prev = oldProps[key]
+                const next = newProps[key]
+                if (prev !== next) {
+                    // 新的有，老的没有，用新的改掉老的
+                    hostPatchProp(el, key, prev, next)
+                }
+            }
+            for (const key in oldProps) {
+                if (!(key in newProps)) {
+                    // 老的存在，新的没有，置为 null
+                    const prev = oldProps[key]
+                    hostPatchProp(el, key, prev, null)
+                }
+            }
+        }
+    }
+
+    /**
+     * 对比子元素，更新子元素
+     * 比较情况有如下：
+     *   新儿子	 旧儿子	    操作方式
+     * 1 文本	 数组	   （删除老儿子，设置文本内容）
+     * 2 文本	 文本	   （更新文本即可）
+     * 3 文本	 空	       （更新文本即可) 与上面的类似
+     * 4 数组	 数组	   （diff 算法）
+     * 5 数组	 文本	   （清空文本，进行挂载）
+     * 6 数组	 空	       （进行挂载） 与上面的类似
+     * 7 空	     数组	   （删除所有儿子）
+     * 8 空	     文本	   （清空文本）
+     *   空	     空	       （无需处理）
+     * @param n1
+     * @param n2
+     */
+    const patchChildren = (n1, n2, el) => {
+        const c1 = n1 && n1.children
+        const c2 = n2.children
+        const prevShapeFlag = n1 ? n1.shapeFlag : 0
+        const { shapeFlag } = n2
+
+        if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                // 1
+                // 新儿子为文本，旧儿子为数组
+                // 删除老儿子
+                unmountChildren(c1)
+            }
+            if (c1 !== c2) {
+                // 2 3
+                // 新儿子为文本，旧儿子为空或者为不相同的文本时，更新文本
+                hostSetElementText(el, c2)
+            }
+        } else {
+            if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                    // 4
+                    // 旧儿子为数组，新儿子也为数组，使用全量diff
+
+                } else {
+                    // 7
+                    // 旧儿子为数组，新儿子为空，删除所有儿子
+                    unmountChildren(c1)
+                }
+            } else {
+                // 新儿子为数组或空
+                // 老儿子为文本或空
+                if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+                    // 8
+                    // 旧儿子为文本，清空文本
+                    hostSetElementText(el, '')
+                }
+                if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                    // 5 6
+                    // 新儿子为数组，旧儿子为文本或空，进行挂载
+                    mountChildren(c2, el)
+                }
+            }
+        }
+    }
+
+    /**
+     * 对比 n1 和 n2 的属性差异
+     * @param n1
+     * @param n2
+     */
+    const patchElement = (n1, n2) => {
+        let el = (n2.el = n1.el)
+        const oldProps = n1.props || {}
+        const newProps = n2.props || {}
+        // 更新老元素
+        patchProps(oldProps, newProps, el)
+        patchChildren(n1, n2, el)
+    }
+
     const processElement = (n1, n2, container) => {
         if (n1 == null) {
             // 初渲染
             mountElement(n2, container)
         } else {
             // diff 算法
+            patchElement(n1, n2)
         }
     }
 
@@ -71,11 +197,20 @@ export function createRenderer(options) {
         processElement(n1, n2, container)
     }
 
+    /**
+     * 卸载，移除节点
+     * @param vnode
+     */
     const unmount = vnode => {
         // 清空
-        hostRemove(vnode.el)
+        return hostRemove(vnode.el)
     }
 
+    /**
+     * 渲染函数，将虚拟节点渲染为真实节点
+     * @param vnode
+     * @param container
+     */
     const render = (vnode, container) => {
         if (vnode == null) {
             if (container._vnode) {
