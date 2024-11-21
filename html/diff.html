@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>diff</title>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        import { h, render } from '../packages/runtime-dom/dist/runtime-dom.esm.js'
+        const app = document.getElementById('app')
+
+        // render(h('div', { style: { color: 'red'}}, ''), app)
+        // render(h('div', { style: { color: 'red'}}, 'hello!'), app)
+        render(h('div', { style: { color: 'red'}}, [h('span', '1'), h('span', 2)]), app)
+
+        setTimeout(() => {
+            // render(h('div', { style: { color: 'red'}}, ''), app)
+            render(h('div', { style: { color: 'red'}}, 'world!'), app)
+            // render(h('div', { style: { color: 'red'}}, [h('span', '1'), h('span', 2), h('span', 3)]), app)
+        }, 1000)
+    </script>
+</body>
+</html>
