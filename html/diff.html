@@ -26,10 +26,11 @@
             // render(h('div', { style: { color: 'red'}}, 'world!'), app)
             // render(h('div', { style: { color: 'red'}}, [h('span', '1'), h('span', 2), h('span', 3)]), app)
             render(h('div', { style: { color: 'red'}}, h('ul', [
+                h('li', { key: 'd' }, 'd'),
+                h('li', { key: 'e' }, 'e'),
                 h('li', { key: 'a' }, 'a'),
                 h('li', { key: 'b' }, 'b'),
                 h('li', { key: 'c' }, 'c'),
-                h('li', { key: 'd' }, 'd'),
             ])), app)
         }, 1000)
     </script>
