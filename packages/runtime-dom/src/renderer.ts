@@ -44,7 +44,7 @@ export function createRenderer(options) {
      * @param vnode
      * @param container
      */
-    const mountElement = (vnode, container) => {
+    const mountElement = (vnode, container, anchor) => {
         const { type, props, children, shapeFlag } = vnode
         // 创建元素
         const el = (vnode.el = hostCreateElement(type))
@@ -60,7 +60,7 @@ export function createRenderer(options) {
         } else if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
             hostSetElementText(el, children)
         }
-        hostInsert(el, container)
+        hostInsert(el, container, anchor)
     }
 
     /**
@@ -85,6 +85,78 @@ export function createRenderer(options) {
                     const prev = oldProps[key]
                     hostPatchProp(el, key, prev, null)
                 }
+            }
+        }
+    }
+
+    const patchKeyedChildren = (c1, c2, el) => {
+        let i = 0 // 默认从 0 开始比对
+        const l2 = c2.length
+        let e1 = c1.length - 1 // 旧儿子结束的下标
+        let e2 = l2 - 1 // 新儿子结束的下标
+
+        // 1. 从头部开始对比 sync from start
+        // a b c
+        // a b d e
+        // i = 2, e1 = 2, e2 = 3
+        while (i <= e1 && i <= e2) {
+            const n1 = c1[i]
+            const n2 = c2[i]
+            if (isSameVNodeType(n1, n2)) {
+                patch(n1, n2, el) // 深度遍历
+            } else {
+                break
+            }
+            i++
+        }
+        // 2. 从尾部开始对比 sync from end
+        // a b c
+        // d e b c
+        while (i <= e1 && i <= e2) {
+            const n1 = c1[e1]
+            const n2 = c2[e2]
+            if (isSameVNodeType(n1, n2)) {
+                patch(n1, n2, el) // 深度遍历
+            } else {
+                break
+            }
+            e1--
+            e2--
+        }
+        // 3. 同序列 + 挂载 (common sequence + mount)
+        // (a b)
+        // (a b) c
+        // i = 2, e1 = 1, e2 = 2
+        // (a b)
+        // c (a b)
+        // i = 0, e1 = -1, e2 = 0
+        if (i > e1) {
+            if (i <= e2) {
+                // 第一种：判断下一个元素是否存在
+                // e2 + 1 存在，表示向前插入挂载
+                // e2 + 1 不存在，表示向后插入挂载
+                // 第二种：判断下一个元素是否越界
+                // e2 + 1 < c2.length
+                const nextPos = e2 + 1
+                const anchor = nextPos < l2 ? c2[nextPos].el : null
+                while (i <= e2) {
+                    patch(null, c2[i], el, anchor)
+                    i++
+                }
+            }
+        }
+        // 4. 同序列 + 卸载 (common sequence + unmount)
+        // (a b) c
+        // (a b)
+        // i = 2, e1 = 2, e2 = 1
+        // a (b c)
+        // (b c)
+        // i = 0, e1 = 0, e2 = -1
+        else if (i > e2) {
+            while (i <= e1) {
+                // 卸载
+                unmount(c1[i])
+                i++
             }
         }
     }
@@ -128,7 +200,7 @@ export function createRenderer(options) {
                 if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                     // 4
                     // 旧儿子为数组，新儿子也为数组，使用全量diff
-
+                    patchKeyedChildren(c1, c2, el)
                 } else {
                     // 7
                     // 旧儿子为数组，新儿子为空，删除所有儿子
@@ -165,10 +237,10 @@ export function createRenderer(options) {
         patchChildren(n1, n2, el)
     }
 
-    const processElement = (n1, n2, container) => {
+    const processElement = (n1, n2, container, anchor) => {
         if (n1 == null) {
             // 初渲染
-            mountElement(n2, container)
+            mountElement(n2, container, anchor)
         } else {
             // diff 算法
             patchElement(n1, n2)
@@ -181,7 +253,7 @@ export function createRenderer(options) {
      * @param n2 新节点
      * @param container 容器
      */
-    const patch = (n1, n2, container) => {
+    const patch = (n1, n2, container, anchor = null) => {
         // patch 函数不仅可以用来完成更新，也可以用来执行挂载。
         if (n1 === n2) {
             return
@@ -194,7 +266,7 @@ export function createRenderer(options) {
             // 删除节点后会执行 processElement 进行渲染 n2
         }
         // 处理元素
-        processElement(n1, n2, container)
+        processElement(n1, n2, container, anchor)
     }
 
     /**
