@@ -40,9 +40,10 @@ export function createRenderer(options) {
     }
 
     /**
-     * 挂在元素节点
+     * 挂载元素节点
      * @param vnode
      * @param container
+     * @param anchor 插入的位置
      */
     const mountElement = (vnode, container, anchor) => {
         const { type, props, children, shapeFlag } = vnode
@@ -89,6 +90,12 @@ export function createRenderer(options) {
         }
     }
 
+    /**
+     * 有 key 的情况下更新子元素
+     * @param c1
+     * @param c2
+     * @param el
+     */
     const patchKeyedChildren = (c1, c2, el) => {
         let i = 0 // 默认从 0 开始比对
         const l2 = c2.length
@@ -176,6 +183,7 @@ export function createRenderer(options) {
      *   空	     空	       （无需处理）
      * @param n1
      * @param n2
+     * @param el
      */
     const patchChildren = (n1, n2, el) => {
         const c1 = n1 && n1.children
@@ -237,6 +245,13 @@ export function createRenderer(options) {
         patchChildren(n1, n2, el)
     }
 
+    /**
+     * 处理元素 初渲染和更新
+     * @param n1
+     * @param n2
+     * @param container
+     * @param anchor
+     */
     const processElement = (n1, n2, container, anchor) => {
         if (n1 == null) {
             // 初渲染
@@ -252,6 +267,7 @@ export function createRenderer(options) {
      * @param n1 旧节点
      * @param n2 新节点
      * @param container 容器
+     * @param anchor 插入的锚点
      */
     const patch = (n1, n2, container, anchor = null) => {
         // patch 函数不仅可以用来完成更新，也可以用来执行挂载。
