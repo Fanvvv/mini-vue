@@ -166,6 +166,23 @@ export function createRenderer(options) {
                 i++
             }
         }
+        // 5. 未知序列 unknown sequence
+        // [i ... e1 + 1]: a b [c d e] f g
+        // [i ... e2 + 1]: a b [e d c h] f g
+        // i = 2, e1 = 4, e2 = 5
+        else {
+            const s1 = i
+            const s2 = i
+            // 从新儿子中找出需要更新的位置，记录他们的下表和值，放入映射表中
+            const keyToNewIndexMap = new Map()
+            for (i = s2; i <= e2; i++) {
+                const vnode = c2[i]
+                if (vnode.key != null) {
+                    // { e:2, d:3, c:4, h:5 }
+                    keyToNewIndexMap.set(vnode.key, i)
+                }
+            }
+        }
     }
 
     /**
